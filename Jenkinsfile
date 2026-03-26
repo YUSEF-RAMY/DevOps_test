@@ -20,14 +20,14 @@ pipeline {
             steps {
                 echo '🧹 Cleaning up old containers...'
                 // استخدمنا docker-compose بالشرطة وجربنا نشيل الـ flags اللي بتعمل مشاكل
-                sh 'docker-compose down || true'
+                sh 'docker compose down || true'
             }
         }
  
         stage('Build Images') {
             steps {
                 echo '🏗️ Building Fresh Docker Images...'
-                // استخدمنا docker-compose بالشرطة
+                // استخدمنا المسار الكامل والشرطة عشان نهرب من أي لغبطة
                 sh 'docker-compose build'
             }
         }
@@ -35,7 +35,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo '🚢 Deploying Containers...'
-                sh 'docker-compose up -d'
+                sh 'docker compose up -d'
             }
         }
  
