@@ -19,23 +19,23 @@ pipeline {
         stage('Cleanup') {
             steps {
                 echo '🧹 Cleaning up old containers...'
-                // استخدمنا docker compose بدون شرطة وبدون -f
-                sh 'docker compose down --remove-orphans || true'
-                sh 'docker rm -f taskflow-frontend taskflow-api taskflow-mysql || true'
+                // استخدمنا docker-compose بالشرطة وجربنا نشيل الـ flags اللي بتعمل مشاكل
+                sh 'docker-compose down || true'
             }
         }
  
         stage('Build Images') {
             steps {
                 echo '🏗️ Building Fresh Docker Images...'
-                sh 'docker compose build --no-cache'
+                // استخدمنا docker-compose بالشرطة
+                sh 'docker-compose build'
             }
         }
  
         stage('Deploy') {
             steps {
                 echo '🚢 Deploying Containers...'
-                sh 'docker compose up -d'
+                sh 'docker-compose up -d'
             }
         }
  
