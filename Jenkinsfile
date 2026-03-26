@@ -2,15 +2,16 @@ pipeline {
     agent any
  
     environment {
-        COMPOSE_FILE = 'docker-compose.yml'
-        APP_NAME     = 'taskflow'
+        // مش هنحتاج الـ COMPOSE_FILE هنا عشان هنعتمد على الـ default name
+        APP_NAME = 'taskflow'
     }
  
     stages {
- 
         stage('Checkout') {
             steps {
-                echo ' Fetching source code...'
+                // الكلمة دي هتأكد لنا إن الكاش اتمسح وجينكنز قرأ الجديد
+                echo '🚀 Fetching NEW Source Code...' 
+                deleteDir() // بيمسح أي ملفات قديمة عشان يضمن إن الـ build نظيف
                 checkout scm
             }
         }
@@ -18,50 +19,45 @@ pipeline {
         stage('Cleanup') {
             steps {
                 echo '🧹 Cleaning up old containers...'
-                sh '''
-                    docker-compose -f ${COMPOSE_FILE} down --remove-orphans 2>/dev/null || true
-                    docker rm -f taskflow-frontend taskflow-api taskflow-mysql 2>/dev/null || true
-                '''
+                // استخدمنا docker compose بدون شرطة وبدون -f
+                sh 'docker compose down --remove-orphans || true'
+                sh 'docker rm -f taskflow-frontend taskflow-api taskflow-mysql || true'
             }
         }
  
         stage('Build Images') {
             steps {
-                echo ' Building Docker images...'
-                sh 'docker-compose -f ${COMPOSE_FILE} build'
+                echo '🏗️ Building Fresh Docker Images...'
+                sh 'docker compose build --no-cache'
             }
         }
  
         stage('Deploy') {
             steps {
-                echo ' Starting containers...'
-                sh 'docker-compose -f ${COMPOSE_FILE} up -d'
+                echo '🚢 Deploying Containers...'
+                sh 'docker compose up -d'
             }
         }
  
         stage('Health Check') {
             steps {
-                echo ' Verifying that the application is running...'
+                echo '🔍 Verifying Application Status...'
                 sh '''
                     sleep 10
-                    docker-compose -f ${COMPOSE_FILE} ps
-                    docker ps | grep taskflow
+                    docker compose ps
                 '''
             }
         }
- 
     }
  
     post {
         success {
-            echo " Build #${BUILD_NUMBER} succeeded! Application is running."
+            echo "✅ Build #${BUILD_NUMBER} SUCCESS! Application is live."
+            // شيلنا الـ down من هنا عشان الـ App ميفصلش لو نجح
         }
         failure {
-            echo " Build #${BUILD_NUMBER} failed!"
-        }
-        always {
-            echo ' Stopping containers...'
-            sh 'docker-compose -f ${COMPOSE_FILE} down 2>/dev/null || true'
+            echo "❌ Build #${BUILD_NUMBER} FAILED! Cleaning up..."
+            sh 'docker compose down || true'
         }
     }
 }
