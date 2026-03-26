@@ -27,7 +27,7 @@ pipeline {
             steps {
                 echo ' Building Docker images...'
                 // شلنا الـ -f عشان نمنع الـ flag error
-                sh 'docker compose build'
+                sh 'docker compose build --no-cache'
             }
         }
  
