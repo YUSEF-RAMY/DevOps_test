@@ -28,7 +28,7 @@ pipeline {
             steps {
                 echo '🏗️ Building Fresh Docker Images...'
                 // استخدمنا المسار الكامل والشرطة عشان نهرب من أي لغبطة
-                sh 'docker-compose build'
+                sh 'docker compose build'
             }
         }
  
