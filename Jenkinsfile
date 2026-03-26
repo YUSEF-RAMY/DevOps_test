@@ -19,7 +19,7 @@ pipeline {
             steps {
                 echo '🧹 Cleaning up old containers...'
                 sh '''
-                    docker-compose -f ${COMPOSE_FILE} down --remove-orphans 2>/dev/null || true
+                    docker compose -f ${COMPOSE_FILE} down --remove-orphans 2>/dev/null || true
                     docker rm -f taskflow-frontend taskflow-api taskflow-mysql 2>/dev/null || true
                 '''
             }
@@ -28,14 +28,14 @@ pipeline {
         stage('Build Images') {
             steps {
                 echo ' Building Docker images...'
-                sh 'docker-compose -f ${COMPOSE_FILE} build'
+                sh 'docker compose -f ${COMPOSE_FILE} build'
             }
         }
  
         stage('Deploy') {
             steps {
                 echo ' Starting containers...'
-                sh 'docker-compose -f ${COMPOSE_FILE} up -d'
+                sh 'docker compose -f ${COMPOSE_FILE} up -d'
             }
         }
  
@@ -44,7 +44,7 @@ pipeline {
                 echo ' Verifying that the application is running...'
                 sh '''
                     sleep 10
-                    docker-compose -f ${COMPOSE_FILE} ps
+                    docker compose -f ${COMPOSE_FILE} ps
                     docker ps | grep taskflow
                 '''
             }
