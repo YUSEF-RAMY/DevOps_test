@@ -2,10 +2,12 @@ pipeline {
     agent any
  
     environment {
-        APP_NAME = 'taskflow'
+        COMPOSE_FILE = 'docker-compose.yml'
+        APP_NAME     = 'taskflow'
     }
  
     stages {
+ 
         stage('Checkout') {
             steps {
                 echo ' Fetching source code...'
@@ -17,7 +19,7 @@ pipeline {
             steps {
                 echo '🧹 Cleaning up old containers...'
                 sh '''
-                    docker compose down --remove-orphans 2>/dev/null || true
+                    docker-compose -f ${COMPOSE_FILE} down --remove-orphans 2>/dev/null || true
                     docker rm -f taskflow-frontend taskflow-api taskflow-mysql 2>/dev/null || true
                 '''
             }
@@ -26,15 +28,14 @@ pipeline {
         stage('Build Images') {
             steps {
                 echo ' Building Docker images...'
-                // شلنا الـ -f عشان نمنع الـ flag error
-                sh 'docker compose build --no-cache'
+                sh 'docker-compose -f ${COMPOSE_FILE} build'
             }
         }
  
         stage('Deploy') {
             steps {
                 echo ' Starting containers...'
-                sh 'docker compose up -d'
+                sh 'docker-compose -f ${COMPOSE_FILE} up -d'
             }
         }
  
@@ -43,20 +44,24 @@ pipeline {
                 echo ' Verifying that the application is running...'
                 sh '''
                     sleep 10
-                    docker compose ps
+                    docker-compose -f ${COMPOSE_FILE} ps
                     docker ps | grep taskflow
                 '''
             }
         }
+ 
     }
  
     post {
         success {
-            echo " ✅ Build #${BUILD_NUMBER} succeeded! Application is live."
+            echo " Build #${BUILD_NUMBER} succeeded! Application is running."
         }
         failure {
-            echo " ❌ Build #${BUILD_NUMBER} failed! Cleaning up..."
-            sh 'docker compose down 2>/dev/null || true'
+            echo " Build #${BUILD_NUMBER} failed!"
+        }
+        always {
+            echo ' Stopping containers...'
+            sh 'docker-compose -f ${COMPOSE_FILE} down 2>/dev/null || true'
         }
     }
 }
